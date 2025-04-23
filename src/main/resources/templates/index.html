@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Чат</title>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+</head>
+<body>
+<h2>Чат</h2>
+<label>Ваше имя: <input type="text" id="sender"></label>
+<label>Получатель: <input type="text" id="recipient"></label>
+<div id="chat"></div>
+<input type="text" id="messageInput">
+<button onclick="sendMessage()">Отправить</button>
+
+<script>
+  let stompClient = null;
+
+  function connect() {
+    const socket = new SockJS('/chat');
+    stompClient = Stomp.over(socket);
+    stompClient.connect({}, function () {
+      stompClient.subscribe('/topic/messages', function (messageOutput) {
+        const message = JSON.parse(messageOutput.body);
+        const chat = document.getElementById('chat');
+        chat.innerHTML += `<p><b>${message.sender}:</b> ${message.content}</p>`;
+      });
+    });
+  }
+
+  function sendMessage() {
+    const sender = document.getElementById('sender').value;
+    const recipient = document.getElementById('recipient').value;
+    const content = document.getElementById('messageInput').value;
+    stompClient.send("/app/send", {}, JSON.stringify({'sender': sender, 'recipient': recipient, 'content': content}));
+  }
+
+  connect();
+</script>
+</body>
+</html>
