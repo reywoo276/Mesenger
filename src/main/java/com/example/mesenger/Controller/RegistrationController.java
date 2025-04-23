@@ -15,20 +15,20 @@ public class RegistrationController {
 
     @GetMapping("/register")
     public String showRegistrationForm(Model model) {
-        model.addAttribute("user", new User()); // Створюємо новий об'єкт User для передачі в шаблон
-        return "register"; // Перевір, чи цей шаблон знаходиться в правильній папці templates
+        model.addAttribute("user", new User());
+        return "registration"; // назва шаблону: registration.html
     }
 
     @PostMapping("/register")
     public String registerUser(@ModelAttribute User user, Model model) {
         if (userRepository.existsByNickname(user.getNickname())) {
             model.addAttribute("error", "Нікнейм вже використовується");
-            return "register"; // Повертаємо назад на форму, якщо є помилка
+            model.addAttribute("user", user); // Щоб не втратити значення
+            return "registration";
         }
-        userRepository.save(user); // Зберігаємо користувача в базі
-        model.addAttribute("success", "Успішна реєстрація!"); // Додаємо повідомлення про успіх
-        return "redirect:/chat"; // Перенаправлення після успіху
+        userRepository.save(user);
+        model.addAttribute("success", "Успішна реєстрація!");
+        model.addAttribute("user", new User()); // Очищена форма
+        return "registration";
     }
 }
-
-
