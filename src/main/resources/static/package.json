@@ -9,7 +9,7 @@
     "react-scripts": "5.0.1"
   },
   "scripts": {
-    "start": "react-scripts start"
+    "start": "cross-env BROWSER=chrome react-scripts start"
   },
   "proxy": "http://localhost:8080",
   "browserslist": {

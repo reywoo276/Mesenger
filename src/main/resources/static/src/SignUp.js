@@ -18,8 +18,13 @@ function SignUp() {
 
             const data = await res.json();
             if (res.ok) {
-                alert("✅ Успішна реєстрація! JWT: " + data.token);
-            } else {
+                // Сохраняем токен в cookie
+                document.cookie = `token=${data.token}; path=/; max-age=${7 * 24 * 60 * 60}; Secure; SameSite=Strict`;
+
+                alert("✅ Успішна реєстрація!");
+                window.location.href = "/";
+            }
+            else {
                 alert("❌ Помилка: " + data.message);
             }
         } catch (err) {

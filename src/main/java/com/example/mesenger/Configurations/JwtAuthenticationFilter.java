@@ -2,14 +2,11 @@ package com.example.mesenger.Configurations;
 
 import com.example.mesenger.Service.JwtService;
 import com.example.mesenger.Service.UserService;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import lombok.RequiredArgsConstructor;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,7 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-
 
 @Component
 @RequiredArgsConstructor
@@ -38,6 +34,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        // Пропускаем WebSocket-запросы без проверки токена
+        String path = request.getServletPath();
+        if (path.startsWith("/ws")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // Получаем токен из заголовка
         var authHeader = request.getHeader(HEADER_NAME);
         if (StringUtils.isEmpty(authHeader) || !StringUtils.startsWith(authHeader, BEARER_PREFIX)) {
@@ -45,7 +48,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Обрезаем префикс и получаем имя пользователя из токена
         var jwt = authHeader.substring(BEARER_PREFIX.length());
         var username = jwtService.extractUserName(jwt);
 
@@ -54,21 +56,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     .userDetailsService()
                     .loadUserByUsername(username);
 
-            // Если токен валиден, то аутентифицируем пользователя
             if (jwtService.isTokenValid(jwt, userDetails)) {
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
-
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,
                         userDetails.getAuthorities()
                 );
-
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 context.setAuthentication(authToken);
                 SecurityContextHolder.setContext(context);
             }
         }
+
         filterChain.doFilter(request, response);
     }
 }

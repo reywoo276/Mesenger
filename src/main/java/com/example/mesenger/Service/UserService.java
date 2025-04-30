@@ -30,10 +30,10 @@ public class UserService {
      * @return созданный пользователь
      */
     public User create(User user) {
-        if (repository.existsByUsername(user.getUsername())) {
-            // Заменить на свои исключения
-            throw new RuntimeException("Пользователь с таким именем уже существует");
-        }
+//        if (repository.existsByUsername(user.getUsername())) {
+//            // Заменить на свои исключения
+//            throw new RuntimeException("Пользователь с таким именем уже существует");
+//        }
 
         if (repository.existsByEmail(user.getEmail())) {
             throw new RuntimeException("Пользователь с таким email уже существует");
@@ -55,13 +55,24 @@ public class UserService {
 
     /**
      * Получение пользователя по имени пользователя
+     *
+     * @return пользователь
+     */
+    public User getByEmail(String email) {
+        return repository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
+
+    }
+
+    /**
+     * Получение пользователя по имени пользователя
      * <p>
      * Нужен для Spring Security
      *
      * @return пользователь
      */
     public UserDetailsService userDetailsService() {
-        return this::getByUsername;
+        return this::getByEmail;
     }
 
     /**
@@ -71,8 +82,8 @@ public class UserService {
      */
     public User getCurrentUser() {
         // Получение имени пользователя из контекста Spring Security
-        var username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return getByUsername(username);
+        var email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return getByEmail(email);
     }
 
 

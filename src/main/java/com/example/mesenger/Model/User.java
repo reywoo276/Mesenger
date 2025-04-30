@@ -1,5 +1,6 @@
 package com.example.mesenger.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,10 +25,11 @@ public class User implements UserDetails {
     @SequenceGenerator(name = "user_id_seq", sequenceName = "user_id_seq", allocationSize = 1)
     private Long id;
 
-    @Column(name = "username", unique = true, nullable = false)
+    @Column(name = "username", unique = false, nullable = false)
     private String username;
 
     @Column(name = "password", nullable = false)
+    @JsonIgnore
     private String password;
 
     @Column(name = "email", unique = true, nullable = false)
@@ -38,6 +40,7 @@ public class User implements UserDetails {
     private Role role;
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
     }
