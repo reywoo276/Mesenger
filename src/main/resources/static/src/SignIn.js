@@ -9,6 +9,8 @@ function SignIn() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log("📤 Надсилаємо запит на /auth/sign-in з даними:", form);
+
         try {
             const res = await fetch("/auth/sign-in", {
                 method: "POST",
@@ -16,23 +18,49 @@ function SignIn() {
                 body: JSON.stringify(form),
             });
 
-            const data = await res.json();
+            console.log("📥 Відповідь статус:", res.status);
+            const text = await res.text();
+            console.log("📥 Сировий текст відповіді:", text);
+
+            let data;
+            try {
+                data = JSON.parse(text);
+                console.log("✅ Розпарсена відповідь:", data);
+            } catch {
+                console.error("❌ Неможливо розпарсити JSON. Відповідь:", text);
+                throw new Error("Сервер повернув не JSON");
+            }
+
             if (res.ok) {
-                alert("✅ Успешный вход! JWT: " + data.token);
+                alert("✅ Успішний вхід! JWT: " + data.token);
+                window.location.href = "/"; // зміни при потребі на index.html
             } else {
-                alert("❌ Ошибка: " + data.message);
+                alert("❌ Помилка: " + (data.message || "Невідома помилка"));
             }
         } catch (err) {
-            alert("❌ Сервер не отвечает.");
+            alert("❌ Сервер не відповідає або сталася помилка: " + err.message);
+            console.error("❌ Помилка під час fetch:", err);
         }
     };
 
     return (
         <form onSubmit={handleSubmit}>
-            <h2>Вход</h2>
-            <input name="email" type="email" placeholder="Email" onChange={handleChange} required /><br />
-            <input name="password" type="password" placeholder="Password" onChange={handleChange} required /><br />
-            <button type="submit">Войти</button>
+            <h2>Вхід</h2>
+            <input
+                name="email"
+                type="email"
+                placeholder="Email"
+                onChange={handleChange}
+                required
+            /><br />
+            <input
+                name="password"
+                type="password"
+                placeholder="Пароль"
+                onChange={handleChange}
+                required
+            /><br />
+            <button type="submit">Увійти</button>
         </form>
     );
 }

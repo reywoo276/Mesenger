@@ -10,7 +10,7 @@ function SignUp() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch("/auth/sign-up", {
+            const res = await fetch("auth/sign-up", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(form),
@@ -18,24 +18,99 @@ function SignUp() {
 
             const data = await res.json();
             if (res.ok) {
-                alert("✅ Успешная регистрация! JWT: " + data.token);
+                alert("✅ Успішна реєстрація! JWT: " + data.token);
             } else {
-                alert("❌ Ошибка: " + data.message);
+                alert("❌ Помилка: " + data.message);
             }
         } catch (err) {
-            alert("❌ Сервер не отвечает.");
+            alert("❌ Сервер не відповідає.");
         }
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <h2>Регистрация</h2>
-            <input name="username" placeholder="Username" onChange={handleChange} required /><br />
-            <input name="email" type="email" placeholder="Email" onChange={handleChange} required /><br />
-            <input name="password" type="password" placeholder="Password" onChange={handleChange} required /><br />
-            <button type="submit">Зарегистрироваться</button>
-        </form>
+        <div style={styles.container}>
+            <form onSubmit={handleSubmit} style={styles.form}>
+                <h2 style={styles.title}>Реєстрація</h2>
+
+                <input
+                    style={styles.input}
+                    name="username"
+                    placeholder="Нікнейм"
+                    value={form.username}
+                    onChange={handleChange}
+                    required
+                />
+
+                <input
+                    style={styles.input}
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={form.email}
+                    onChange={handleChange}
+                    required
+                />
+
+                <input
+                    style={styles.input}
+                    type="password"
+                    name="password"
+                    placeholder="Пароль"
+                    value={form.password}
+                    onChange={handleChange}
+                    required
+                />
+
+                <button type="submit" style={styles.button}>
+                    Зареєструватися
+                </button>
+            </form>
+        </div>
     );
 }
+
+const styles = {
+    container: {
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+        background: "linear-gradient(135deg, #74ebd5, #9face6)",
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    },
+    form: {
+        backgroundColor: "rgba(255, 255, 255, 0.85)",
+        padding: "2rem",
+        borderRadius: "12px",
+        boxShadow: "0 8px 20px rgba(0,0,0,0.2)",
+        display: "flex",
+        flexDirection: "column",
+        width: "320px",
+        backdropFilter: "blur(10px)",
+    },
+    title: {
+        textAlign: "center",
+        marginBottom: "1.5rem",
+        fontSize: "1.5rem",
+        color: "#333",
+    },
+    input: {
+        marginBottom: "1rem",
+        padding: "0.75rem",
+        fontSize: "1rem",
+        borderRadius: "6px",
+        border: "1px solid #ccc",
+    },
+    button: {
+        padding: "0.75rem",
+        fontSize: "1rem",
+        backgroundColor: "#5b73e8",
+        color: "#fff",
+        border: "none",
+        borderRadius: "6px",
+        cursor: "pointer",
+        transition: "background-color 0.3s",
+    },
+};
 
 export default SignUp;
