@@ -22,7 +22,7 @@ function SignUp() {
                 document.cookie = `token=${data.token}; path=/; max-age=${7 * 24 * 60 * 60}; Secure; SameSite=Strict`;
 
                 alert("✅ Успішна реєстрація!");
-                window.location.href = "/";
+                window.location.href = "/chat";
             }
             else {
                 alert("❌ Помилка: " + data.message);
