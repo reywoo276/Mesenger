@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -64,6 +66,10 @@ public class UserService {
 
     }
 
+    public User findByEmail(String email) {
+        return repository.findByEmail(email).orElse(null);
+    }
+
     /**
      * Получение пользователя по имени пользователя
      * <p>
@@ -85,6 +91,13 @@ public class UserService {
         var email = SecurityContextHolder.getContext().getAuthentication().getName();
         return getByEmail(email);
     }
+
+    // ...
+    public List<User> getAllUsers() {
+        return repository.findAll();
+    }
+// ...
+
 
 
     /**

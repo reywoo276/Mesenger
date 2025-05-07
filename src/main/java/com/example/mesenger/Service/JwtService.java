@@ -1,7 +1,5 @@
 package com.example.mesenger.Service;
 
-
-
 import com.example.mesenger.Model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -12,7 +10,6 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
 
 import java.security.Key;
 import java.util.Date;
@@ -27,10 +24,10 @@ public class JwtService {
     private String jwtSigningKey;
 
     /**
-     * Извлечение имени пользователя из токена
+     * Извлечение email (subject) из токена
      *
      * @param token токен
-     * @return имя пользователя
+     * @return email пользователя
      */
     public String extractUserName(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -45,7 +42,7 @@ public class JwtService {
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         if (userDetails instanceof User customUserDetails) {
-            claims.put("id", customUserDetails.getId());
+            claims.put("userId", customUserDetails.getId());
             claims.put("username", customUserDetails.getUsername());
             claims.put("email", customUserDetails.getEmail());
             claims.put("role", customUserDetails.getRole());
@@ -61,35 +58,43 @@ public class JwtService {
      * @return true, если токен валиден
      */
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String userName = extractUserName(token);
-        return (userName.equals(userDetails.getUsername())) && !isTokenExpired(token);
+        final String userEmail = extractUserName(token);
+        return (userEmail.equals(userDetails.getUsername())) && !isTokenExpired(token);
     }
 
     /**
      * Извлечение данных из токена
      *
      * @param token           токен
-     * @param claimsResolvers функция извлечения данных
+     * @param claimsResolver  функция извлечения данных
      * @param <T>             тип данных
      * @return данные
      */
-    private <T> T extractClaim(String token, Function<Claims, T> claimsResolvers) {
+    private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
-        return claimsResolvers.apply(claims);
+        return claimsResolver.apply(claims);
     }
 
     /**
-     * Генерация токена
+     * Генерация токена с доп. данными
      *
      * @param extraClaims дополнительные данные
      * @param userDetails данные пользователя
      * @return токен
      */
     private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
-        return Jwts.builder().setClaims(extraClaims).setSubject(userDetails.getUsername())
+        String email = userDetails.getUsername(); // fallback
+        if (userDetails instanceof User customUserDetails) {
+            email = customUserDetails.getEmail(); // subject = email
+        }
+
+        return Jwts.builder()
+                .setClaims(extraClaims)
+                .setSubject(email) // 📌 email теперь subject
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 100000 * 60 * 24))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS256).compact();
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24)) // 24 часа
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     /**
@@ -113,13 +118,16 @@ public class JwtService {
     }
 
     /**
-     * Извлечение всех данных из токена
+     * Извлечение всех клеймов токена
      *
      * @param token токен
-     * @return данные
+     * @return клеймы
      */
-    private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(getSigningKey()).build().parseClaimsJws(token)
+    public Claims extractAllClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
                 .getBody();
     }
 

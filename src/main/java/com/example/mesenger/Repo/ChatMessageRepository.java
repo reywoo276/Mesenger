@@ -1,22 +1,26 @@
 package com.example.mesenger.Repo;
 
 import com.example.mesenger.Model.ChatMessage;
+import com.example.mesenger.Model.MessageStatus;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Modifying;
+
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
+public interface ChatMessageRepository extends JpaRepository<ChatMessage, String> {
 
-    @Query("SELECT m FROM ChatMessage m WHERE " +
-            "(m.sender.id = :user1Id AND m.recipient.id = :user2Id) OR " +
-            "(m.sender.id = :user2Id AND m.recipient.id = :user1Id) " +
-            "ORDER BY m.timestamp ASC")
-    List<ChatMessage> findConversation(@Param("user1Id") Long user1Id, @Param("user2Id") Long user2Id);
+    long countBySenderIdAndRecipientIdAndStatus(String senderId, String recipientId, MessageStatus status);
 
+    List<ChatMessage> findByChatId(String chatId);
 
+    @Modifying
+    @Transactional
+    @Query("UPDATE ChatMessage c SET c.status = :status WHERE c.senderId = :senderId AND c.recipientId = :recipientId")
+    void updateMessageStatus(String senderId, String recipientId, MessageStatus status);
 }
 

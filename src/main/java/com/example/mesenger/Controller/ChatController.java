@@ -1,65 +1,61 @@
 package com.example.mesenger.Controller;
 
-
-import com.example.mesenger.DTO.SendMessageRequest;
 import com.example.mesenger.Model.ChatMessage;
-import com.example.mesenger.Model.User;
-import com.example.mesenger.Repo.ChatMessageRepository;
-import com.example.mesenger.Repo.UserRepository;
-
-
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import com.example.mesenger.Model.ChatNotification;
+import com.example.mesenger.Service.ChatMessageService;
+import com.example.mesenger.Service.ChatRoomService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
-import java.time.LocalDateTime;
-import java.util.List;
 
-@RestController
-@RequestMapping("/api/chat")
-@RequiredArgsConstructor
+@Controller
 public class ChatController {
 
-    private final ChatMessageRepository chatMessageRepository;
-    private final UserRepository userRepository;
+    @Autowired private SimpMessagingTemplate messagingTemplate;
+    @Autowired private ChatMessageService chatMessageService;
+    @Autowired private ChatRoomService chatRoomService;
 
-    @PostMapping("/send")
-    public ResponseEntity<?> sendMessage(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody @Valid SendMessageRequest request
-    ) {
-        User sender = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("Sender not found"));
+    @MessageMapping("/chat")
+    public void processMessage(@Payload ChatMessage chatMessage) {
+        var chatId = chatRoomService
+                .getChatId(chatMessage.getSenderId(), chatMessage.getRecipientId(), true);
+        chatMessage.setChatId(chatId.get());
 
-        User recipient = userRepository.findById(request.getRecipientId())
-                .orElseThrow(() -> new RuntimeException("Recipient not found"));
-
-        ChatMessage message = ChatMessage.builder()
-                .sender(sender)
-                .recipient(recipient)
-                .content(request.getContent())
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        chatMessageRepository.save(message);
-
-        return ResponseEntity.ok("Message sent successfully");
+        ChatMessage saved = chatMessageService.save(chatMessage);
+        messagingTemplate.convertAndSendToUser(
+                chatMessage.getRecipientId(),"/queue/messages",
+//                new ChatNotification(
+//                        saved.getId(),
+//                        saved.getSenderId(),
+//                        saved.getSenderName())
+                      saved);
     }
 
-    @GetMapping("/conversation/{userId}")
-    public ResponseEntity<List<ChatMessage>> getConversation(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId
-    ) {
-        User currentUser = userRepository.findByUsername(userDetails.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    @GetMapping("/messages/{senderId}/{recipientId}/count")
+    public ResponseEntity<Long> countNewMessages(
+            @PathVariable String senderId,
+            @PathVariable String recipientId) {
 
-        List<ChatMessage> conversation = chatMessageRepository
-                .findConversation(currentUser.getId(), userId);
+        return ResponseEntity
+                .ok(chatMessageService.countNewMessages(senderId, recipientId));
+    }
 
-        return ResponseEntity.ok(conversation);
+    @GetMapping("/messages/{senderId}/{recipientId}")
+    public ResponseEntity<?> findChatMessages ( @PathVariable String senderId,
+                                                @PathVariable String recipientId) {
+        return ResponseEntity
+                .ok(chatMessageService.findChatMessages(senderId, recipientId));
+    }
+
+    @GetMapping("/messages/{id}")
+    public ResponseEntity<?> findMessage ( @PathVariable String id) {
+        return ResponseEntity
+                .ok(chatMessageService.findById(id));
     }
 }
