@@ -1,0 +1,45 @@
+.home-container {
+    /*background-image: url("./assets/background.jpg");*/
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.home-box {
+    background-color: rgba(255, 255, 255, 0.92);
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 100%;
+}
+
+.home-box h1 {
+    margin-bottom: 30px;
+    color: #2d2d2d;
+}
+
+.home-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.home-btn {
+    background-color: #4a90e2;
+    color: white;
+    padding: 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.home-btn:hover {
+    background-color: #357ABD;
+}
